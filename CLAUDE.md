@@ -256,6 +256,57 @@ src/
 
 ## 版本记录
 
+### v1.5.0 (2025-09-23) - 生产环境部署完成 🚀
+- ✅ 完成 Vercel 生产环境部署配置
+- ✅ 解决多个 Vercel 配置冲突问题
+- ✅ 配置完整的环境变量和 Supabase 数据库
+- ✅ 修复构建错误和类型问题
+- ✅ 生产环境验证通过
+
+**部署过程关键问题与解决方案**
+
+1. **Vercel 配置冲突问题**
+   - 问题：`functions` 属性与 `builds` 属性冲突
+   - 解决：移除 `functions` 属性，使用 Next.js 默认配置
+
+2. **Routes 与 Headers 冲突**
+   - 问题：`routes` 属性与 `headers`、`redirects` 属性互斥
+   - 解决：移除 `routes` 属性，Next.js 自动处理 API 路由
+
+3. **环境变量 Secrets 引用错误**
+   - 问题：`vercel.json` 中引用了不存在的 `@secret` 配置
+   - 解决：移除 `env` 配置，改为在 Vercel UI 中手动配置环境变量
+
+4. **类型系统统一**
+   - 问题：SRT 解析的 `LegacySubtitle` 与数据库 `Subtitle` 类型不匹配
+   - 解决：添加类型转换函数，统一接口定义
+
+**最终 Vercel 配置**
+```json
+{
+  "version": 2,
+  "name": "video-english-learning-platform",
+  "builds": [{"src": "package.json", "use": "@vercel/next"}],
+  "headers": [安全头部配置]
+}
+```
+
+**生产环境信息**
+- 🌐 **部署平台**: Vercel
+- 🔗 **项目名称**: youtube-english-new
+- 🗄️ **数据库**: Supabase (boyyfwfjqczykgufyasp.supabase.co)
+- 📺 **视频服务**: Cloudflare Stream
+- ⚡ **构建状态**: 成功通过
+
+**环境变量配置**
+- ✅ NEXT_PUBLIC_SUPABASE_URL
+- ✅ NEXT_PUBLIC_SUPABASE_ANON_KEY
+- ✅ SUPABASE_SERVICE_ROLE_KEY
+- ✅ NEXT_PUBLIC_CLOUDFLARE_ACCOUNT_ID
+- ✅ CLOUDFLARE_STREAM_API_TOKEN
+- ✅ NEXT_PUBLIC_SITE_URL
+- ✅ NODE_ENV
+
 ### v1.4.0 (2025-09-23) - 字幕点击跳转与点读模式优化
 - ✅ 新增字幕点击跳转功能：正常播放下点击任意字幕自动跳转到对应时间戳
 - ✅ 暂停状态优化：视频暂停时点击字幕会自动开始播放
@@ -367,8 +418,15 @@ right now I'm reading this didion and babits it's great
 
 ## 当前版本状态
 
-### 运行环境
-- **开发服务器**: `http://localhost:3002` (Vite)
+### 生产环境部署
+- **生产地址**: https://youtube-english-new.vercel.app
+- **部署平台**: Vercel (自动部署)
+- **数据库**: Supabase PostgreSQL
+- **视频服务**: Cloudflare Stream
+- **构建状态**: ✅ 成功部署
+
+### 开发环境
+- **本地开发服务器**: `http://localhost:3002` (Vite)
 - **技术栈**: React + TypeScript + Vite
 - **测试文件**: `/videos/bookmark.mp4` + `/subtitles/bookmark.srt`
 
@@ -381,6 +439,15 @@ right now I'm reading this didion and babits it's great
 6. **✅ 智能滚动**: 高亮字幕自动居中滚动
 7. **✅ 动态布局**: 容器高度自适应屏幕空间
 8. **✅ 响应式设计**: 桌面端和移动端适配
+9. **✅ 生产部署**: Vercel + Supabase + Cloudflare 完整架构
+
+### 部署架构特点
+- **零停机部署**: Git Push 自动触发 Vercel 重新部署
+- **全球 CDN**: Vercel Edge Network 全球加速
+- **数据库连接**: Supabase PostgreSQL 连接池优化
+- **视频流媒体**: Cloudflare Stream 全球分发
+- **安全配置**: CSP 头部和安全策略配置
+- **环境隔离**: Production/Preview/Development 环境分离
 
 ### 性能特点
 - **高精度滚动**: 15%容差居中检测
