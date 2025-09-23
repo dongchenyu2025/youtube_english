@@ -307,6 +307,63 @@ src/
 - ✅ NEXT_PUBLIC_SITE_URL
 - ✅ NODE_ENV
 
+### v1.6.0 (2025-09-23) - 修复 Vercel 部署错误和简化架构 🔧
+- ✅ 完全修复 Vercel 部署错误，网站正常访问
+- ✅ 移除 Supabase 和 Redis 依赖，简化为纯前端应用
+- ✅ 修复 JavaScript 模块加载问题
+- ✅ 优化 Vercel 配置，确保 SPA 正确路由
+- ✅ 清理构建依赖，提升部署稳定性
+
+**遇到的核心问题**
+1. **supabaseKey is required 错误**
+   - 问题：部署时缺少 Supabase 环境变量导致应用无法启动
+   - 解决：完全移除 Supabase 依赖，删除相关组件和文件
+
+2. **vite: command not found 构建错误**
+   - 问题：Vercel 构建时找不到 vite 命令
+   - 解决：将 `vite` 和构建工具从 `devDependencies` 移到 `dependencies`
+
+3. **PostCSS/TailwindCSS 配置冲突**
+   - 问题：存在 PostCSS 配置但缺少 TailwindCSS 依赖
+   - 解决：删除 `postcss.config.js` 和 `tailwind.config.js` 配置文件
+
+4. **SPA 路由配置错误**
+   - 问题：使用 `routes` 配置导致 JavaScript 模块 MIME 类型错误
+   - 解决：改用 `rewrites` 配置，符合 SPA 标准
+
+5. **Redis 脚本加载错误**
+   - 问题：遗留的 Redis 相关脚本引用
+   - 解决：清理 `.next` 缓存目录和所有遗留配置
+
+**最终简化架构**
+```json
+// vercel.json - 最终配置
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+**技术栈简化**
+- ❌ 移除：Next.js + Supabase + Redis + TailwindCSS
+- ✅ 保留：Vite + React + TypeScript + 原生 CSS
+- ✅ 功能：所有核心功能完整保留（视频播放、字幕同步、中英对照、点读模式）
+
+**部署验证**
+- ✅ **构建状态**: 本地和 Vercel 构建均成功
+- ✅ **访问状态**: 网站正常加载，无 JavaScript 错误
+- ✅ **功能验证**: 所有滚动字幕功能正常工作
+- ✅ **性能优化**: 移除不必要依赖，加载速度提升
+
 ### v1.4.0 (2025-09-23) - 字幕点击跳转与点读模式优化
 - ✅ 新增字幕点击跳转功能：正常播放下点击任意字幕自动跳转到对应时间戳
 - ✅ 暂停状态优化：视频暂停时点击字幕会自动开始播放
@@ -414,20 +471,19 @@ right now I'm reading this didion and babits it's great
 ---
 
 **开发工具**: Claude Code + Vite + React + TypeScript
-**最后更新**: 2025-09-23 v1.4.0
+**最后更新**: 2025-09-23 v1.6.0
 
 ## 当前版本状态
 
 ### 生产环境部署
 - **生产地址**: https://youtube-english-new.vercel.app
 - **部署平台**: Vercel (自动部署)
-- **数据库**: Supabase PostgreSQL
-- **视频服务**: Cloudflare Stream
-- **构建状态**: ✅ 成功部署
+- **技术栈**: Vite + React + TypeScript (纯前端)
+- **构建状态**: ✅ 成功部署，所有功能正常
 
 ### 开发环境
-- **本地开发服务器**: `http://localhost:3002` (Vite)
-- **技术栈**: React + TypeScript + Vite
+- **本地开发服务器**: `http://localhost:3000` (Vite)
+- **技术栈**: React + TypeScript + Vite + 原生 CSS
 - **测试文件**: `/videos/bookmark.mp4` + `/subtitles/bookmark.srt`
 
 ### 核心功能状态
@@ -439,14 +495,14 @@ right now I'm reading this didion and babits it's great
 6. **✅ 智能滚动**: 高亮字幕自动居中滚动
 7. **✅ 动态布局**: 容器高度自适应屏幕空间
 8. **✅ 响应式设计**: 桌面端和移动端适配
-9. **✅ 生产部署**: Vercel + Supabase + Cloudflare 完整架构
+9. **✅ 生产部署**: 简化 Vercel 纯前端架构
 
-### 部署架构特点
+### 简化部署架构特点
 - **零停机部署**: Git Push 自动触发 Vercel 重新部署
 - **全球 CDN**: Vercel Edge Network 全球加速
-- **数据库连接**: Supabase PostgreSQL 连接池优化
-- **视频流媒体**: Cloudflare Stream 全球分发
-- **安全配置**: CSP 头部和安全策略配置
+- **静态资源**: 纯前端部署，无服务器依赖
+- **SPA 路由**: rewrites 配置确保单页应用正确加载
+- **构建优化**: 移除不必要依赖，构建速度提升
 - **环境隔离**: Production/Preview/Development 环境分离
 
 ### 性能特点
