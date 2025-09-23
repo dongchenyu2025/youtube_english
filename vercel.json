@@ -25,11 +25,6 @@
     "CLOUDFLARE_STREAM_API_TOKEN": "@cloudflare_stream_api_token",
     "NEXT_PUBLIC_SITE_URL": "@site_url"
   },
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "redirects": [
     {
       "source": "/",
