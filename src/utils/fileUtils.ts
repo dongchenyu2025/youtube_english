@@ -1,3 +1,5 @@
+import { Subtitle } from '../types';
+
 // Legacy Subtitle type for SRT parsing (different from database type)
 interface LegacySubtitle {
   id: number;
@@ -91,14 +93,25 @@ const parseTimeString = (timeStr: string): number => {
   return hours * 3600 + minutes * 60 + seconds + Number(milliseconds) / 1000;
 };
 
-export const loadSubtitleFile = async (file: File): Promise<LegacySubtitle[]> => {
+export const loadSubtitleFile = async (file: File): Promise<Subtitle[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
-        const subtitles = parseSRT(content);
+        const legacySubtitles = parseSRT(content);
+
+        // Convert LegacySubtitle to Subtitle format
+        const subtitles: Subtitle[] = legacySubtitles.map(legacy => ({
+          id: legacy.id,
+          video_id: '', // Will be set when video is uploaded
+          start_time: legacy.startTime,
+          end_time: legacy.endTime,
+          english_text: legacy.text,
+          chinese_text: legacy.translation
+        }));
+
         resolve(subtitles);
       } catch (error) {
         reject(new Error('Failed to parse subtitle file'));
