@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientSupabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
 
 interface AuthFormProps {
@@ -18,7 +18,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const [error, setError] = useState('')
 
   const router = useRouter()
-  const supabase = createClientSupabase()
+  // Supabase client is imported directly
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

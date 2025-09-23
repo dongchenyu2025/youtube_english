@@ -3,14 +3,14 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { createClientSupabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { User, LogOut, BookOpen, Home } from 'lucide-react'
 
 export function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClientSupabase()
+  // Supabase client is imported directly
 
   useEffect(() => {
     const getUser = async () => {

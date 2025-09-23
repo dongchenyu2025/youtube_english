@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X, Heart, HeartOff, Volume2 } from 'lucide-react'
-import { createClientSupabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 interface WordModalProps {
   word: string | null
@@ -15,7 +15,7 @@ export function WordModal({ word, isOpen, onClose }: WordModalProps) {
   const [loading, setLoading] = useState(false)
   const [definition, setDefinition] = useState<string>('')
 
-  const supabase = createClientSupabase()
+  // Supabase client is imported directly
 
   // Mock word definition - In production, you'd call a dictionary API
   const mockDefinitions: Record<string, string> = {

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { User, Trash2, Calendar, BookOpen, Heart } from 'lucide-react'
 import { UserCollection } from '@/types'
-import { createClientSupabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 interface UserProfileProps {
   user: any
@@ -14,7 +14,7 @@ export function UserProfile({ user, collections: initialCollections }: UserProfi
   const [collections, setCollections] = useState(initialCollections)
   const [loading, setLoading] = useState<string | null>(null)
 
-  const supabase = createClientSupabase()
+  // Supabase client is imported directly
 
   const handleDeleteWord = async (word: string) => {
     setLoading(word)
