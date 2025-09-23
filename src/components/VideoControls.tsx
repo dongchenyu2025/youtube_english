@@ -5,8 +5,10 @@ interface VideoControlsProps {
   isPlaying: boolean;
   currentTime: number;
   duration: number;
+  playbackRate: number;
   onPlayPause: () => void;
   onSeek: (time: number) => void;
+  onPlaybackRateChange: (rate: number) => void;
 }
 
 const formatTime = (seconds: number): string => {
@@ -19,8 +21,10 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   isPlaying,
   currentTime,
   duration,
+  playbackRate,
   onPlayPause,
-  onSeek
+  onSeek,
+  onPlaybackRateChange
 }) => {
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -30,6 +34,8 @@ const VideoControls: React.FC<VideoControlsProps> = ({
   };
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const playbackRateOptions = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   return (
     <div className="video-controls">
@@ -59,6 +65,21 @@ const VideoControls: React.FC<VideoControlsProps> = ({
       <span className="time-display">
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
+
+      <div className="playback-rate-selector">
+        <select
+          value={playbackRate}
+          onChange={(e) => onPlaybackRateChange(Number(e.target.value))}
+          className="playback-rate-select"
+          aria-label="Playback speed"
+        >
+          {playbackRateOptions.map((rate) => (
+            <option key={rate} value={rate}>
+              {rate}x
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };

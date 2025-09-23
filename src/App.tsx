@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import VideoControls from './components/VideoControls';
+import VideoHeader from './components/VideoHeader';
+import VideoDescription from './components/VideoDescription';
 import './App.css';
 
 interface Subtitle {
@@ -15,9 +18,15 @@ const App: React.FC = () => {
   const videoPlayerRef = useRef<HTMLDivElement>(null);
   const subtitleItemsContainerRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const [showTranslation, setShowTranslation] = useState(false);
   const [readingMode, setReadingMode] = useState(false);
+  const [repeatMode, setRepeatMode] = useState(false);
+  const [repeatCount, setRepeatCount] = useState(3);
+  const [currentRepeatCount, setCurrentRepeatCount] = useState(0);
+  const [repeatSubtitle, setRepeatSubtitle] = useState<Subtitle | null>(null);
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [targetEndTime, setTargetEndTime] = useState<number | null>(null);
   const [readingModeActiveSubtitle, setReadingModeActiveSubtitle] = useState<Subtitle | null>(null);
@@ -25,6 +34,13 @@ const App: React.FC = () => {
   const [previousActiveId, setPreviousActiveId] = useState<number | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollCheckRef = useRef<number>(0);
+
+  // 视频信息数据
+  const videoInfo = {
+    title: "Bookmark Making Tutorial - 英语书签制作教程",
+    difficulty: "中级",
+    description: "这是一个关于书签制作的英语教程，适合中级英语学习者观看。视频中包含实用的日常英语表达和词汇，帮助提升英语听力和口语能力。"
+  };
 
   // 解析SRT文件
   const parseSRT = (content: string): Subtitle[] => {
@@ -56,6 +72,34 @@ const App: React.FC = () => {
     return hours * 3600 + minutes * 60 + seconds + Number(ms) / 1000;
   };
 
+  // 视频播放控制函数
+  const handlePlayPause = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+      setIsPlaying(true);
+    } else {
+      video.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleSeek = (time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = time;
+    setCurrentTime(time);
+  };
+
+  const handlePlaybackRateChange = (rate: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.playbackRate = rate;
+    setPlaybackRate(rate);
+  };
+
   // 加载字幕文件
   useEffect(() => {
     fetch('/subtitles/bookmark.srt')
@@ -76,6 +120,23 @@ const App: React.FC = () => {
       const current = video.currentTime;
       setCurrentTime(current);
 
+      // 重复播放模式检查
+      if (repeatMode && repeatSubtitle && current >= repeatSubtitle.endTime) {
+        if (currentRepeatCount < repeatCount) {
+          // 还需要重复播放
+          setCurrentRepeatCount(prev => prev + 1);
+          video.currentTime = repeatSubtitle.startTime;
+          return;
+        } else {
+          // 重复播放完成
+          video.pause();
+          setIsPlaying(false);
+          setRepeatSubtitle(null);
+          setCurrentRepeatCount(0);
+          return;
+        }
+      }
+
       // 点读模式自动暂停
       if (readingMode && targetEndTime && current >= targetEndTime) {
         video.pause();
@@ -85,9 +146,17 @@ const App: React.FC = () => {
       }
     };
 
+    const handleDurationChange = () => {
+      setDuration(video.duration);
+    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
-    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
-  }, [readingMode, targetEndTime]);
+    video.addEventListener('durationchange', handleDurationChange);
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('durationchange', handleDurationChange);
+    };
+  }, [readingMode, targetEndTime, repeatMode, repeatSubtitle, currentRepeatCount, repeatCount]);
 
   // 监听播放状态变化，在正常播放过程中清除点读模式的选中状态
   useEffect(() => {
@@ -104,6 +173,14 @@ const App: React.FC = () => {
     }
   }, [readingMode]);
 
+  // 切换重复播放模式时清除相关状态
+  useEffect(() => {
+    if (!repeatMode) {
+      setRepeatSubtitle(null);
+      setCurrentRepeatCount(0);
+    }
+  }, [repeatMode]);
+
   // 获取当前字幕
   const getCurrentSubtitle = (): Subtitle | undefined => {
     return subtitles.find(sub => currentTime >= sub.startTime && currentTime <= sub.endTime);
@@ -117,7 +194,13 @@ const App: React.FC = () => {
     // 跳转到字幕对应的时间点
     video.currentTime = subtitle.startTime;
 
-    if (readingMode) {
+    if (repeatMode) {
+      // 重复播放模式：设置要重复的字幕并开始播放
+      setRepeatSubtitle(subtitle);
+      setCurrentRepeatCount(1); // 从第一次播放开始计数
+      video.play();
+      setIsPlaying(true);
+    } else if (readingMode) {
       // 点读模式：播放到字幕结束时间并自动暂停
       setTargetEndTime(subtitle.endTime);
       setReadingModeActiveSubtitle(subtitle); // 设置选中的字幕
@@ -277,16 +360,18 @@ const App: React.FC = () => {
     }
   }, [activeSubtitle, isPlaying, isSubtitleInCenter, scrollToActiveSubtitle]);
 
-  // 计算字幕列表动态高度
+  // 计算字幕列表动态高度 - 适应新布局
   const calculateSubtitleListHeight = useCallback(() => {
-    if (subtitleControlsRef.current && videoPlayerRef.current) {
+    if (subtitleControlsRef.current) {
       const controlsRect = subtitleControlsRef.current.getBoundingClientRect();
-      const videoRect = videoPlayerRef.current.getBoundingClientRect();
       const controlsBottom = controlsRect.bottom;
-      const videoBottom = videoRect.bottom;
-      const availableHeight = videoBottom - controlsBottom - 20; // 20px为间距
-      const minHeight = 300; // 最小高度
-      const maxHeight = window.innerHeight - controlsBottom - 40; // 最大高度
+
+      // 计算可用高度：从字幕控制区底部到窗口底部
+      const windowHeight = window.innerHeight;
+      const availableHeight = windowHeight - controlsBottom - 40; // 40px为底部边距
+
+      const minHeight = 350; // 最小高度
+      const maxHeight = Math.max(400, availableHeight); // 最大高度
 
       const calculatedHeight = Math.max(minHeight, Math.min(availableHeight, maxHeight));
       setSubtitleListHeight(calculatedHeight);
@@ -323,15 +408,39 @@ const App: React.FC = () => {
   return (
     <div className="app">
       <div className="video-section">
+        <VideoHeader
+          title={videoInfo.title}
+          duration={duration}
+          difficulty={videoInfo.difficulty}
+          currentTime={currentTime}
+        />
+
         <div ref={videoPlayerRef} className="video-player">
-          <video
-            ref={videoRef}
-            src="/videos/bookmark.mp4"
-            controls
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-          />
+          <div className="video-container">
+            <video
+              ref={videoRef}
+              src="/videos/bookmark.mp4"
+              controls={false}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+            />
+            <div className="video-controls-overlay">
+              <VideoControls
+                isPlaying={isPlaying}
+                currentTime={currentTime}
+                duration={duration}
+                playbackRate={playbackRate}
+                onPlayPause={handlePlayPause}
+                onSeek={handleSeek}
+                onPlaybackRateChange={handlePlaybackRateChange}
+              />
+            </div>
+          </div>
         </div>
+
+        <VideoDescription
+          description={videoInfo.description}
+        />
       </div>
 
       <div className="subtitle-section">
@@ -348,6 +457,32 @@ const App: React.FC = () => {
           >
             点读模式
           </button>
+          <button
+            className={`toggle-button ${repeatMode ? 'active' : ''}`}
+            onClick={() => setRepeatMode(!repeatMode)}
+          >
+            重复播放
+          </button>
+          {repeatMode && (
+            <div className="repeat-controls">
+              <label>重复次数:</label>
+              <select
+                value={repeatCount}
+                onChange={(e) => setRepeatCount(Number(e.target.value))}
+                className="repeat-count-select"
+              >
+                <option value={2}>2次</option>
+                <option value={3}>3次</option>
+                <option value={5}>5次</option>
+                <option value={10}>10次</option>
+              </select>
+              {repeatSubtitle && (
+                <span className="repeat-status">
+                  第 {currentRepeatCount}/{repeatCount} 次
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <div

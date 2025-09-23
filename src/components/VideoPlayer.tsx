@@ -21,6 +21,8 @@ export interface VideoPlayerRef {
   getCurrentTime: () => number
   getDuration: () => number
   isPlaying: () => boolean
+  setPlaybackRate: (rate: number) => void
+  getPlaybackRate: () => number
 }
 
 const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
@@ -61,6 +63,14 @@ const VideoPlayer = forwardRef<VideoPlayerRef, VideoPlayerProps>(({
     },
     isPlaying: () => {
       return videoRef.current ? !videoRef.current.paused : false
+    },
+    setPlaybackRate: (rate: number) => {
+      if (videoRef.current) {
+        videoRef.current.playbackRate = rate
+      }
+    },
+    getPlaybackRate: () => {
+      return videoRef.current?.playbackRate || 1
     }
   }))
 
