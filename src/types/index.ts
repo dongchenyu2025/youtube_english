@@ -56,4 +56,45 @@ export interface ApiResponse<T> {
 
 export interface VideoWithSubtitles extends Video {
   subtitles: Subtitle[];
+  wordCards?: WordCard[];
+}
+
+// Close Reading Module Types
+export interface WordCard {
+  id: string;
+  word: string;
+  phonetic: string;
+  chineseDefinition: string;
+  englishDefinition: string;
+  exampleFromVideo: string;
+  exampleTranslation: string;
+  subtitleId: number;
+  firstAppearanceTime: number;
+  userStatus?: 'known' | 'unknown' | null;
+}
+
+export interface PhraseCard {
+  id: string;
+  phrase: string;
+  chineseDefinition: string;
+  context: string;
+  subtitleId: number;
+  userStatus?: 'known' | 'unknown' | null;
+}
+
+export interface ExpressionCard {
+  id: string;
+  expression: string;
+  chineseDefinition: string;
+  usage: string;
+  context: string;
+  subtitleId: number;
+  userStatus?: 'known' | 'unknown' | null;
+}
+
+export interface CloseReadingData {
+  activeTab: 'words' | 'phrases' | 'expressions';
+  wordFilter: 'all' | 'unmarked' | 'known' | 'unknown';
+  showChinese: boolean;
+  userWordMarks: Record<string, 'known' | 'unknown'>;
 }

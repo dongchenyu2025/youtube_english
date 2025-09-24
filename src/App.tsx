@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import VideoControls from './components/VideoControls';
 import VideoHeader from './components/VideoHeader';
 import VideoDescription from './components/VideoDescription';
+import CloseReadingSection from './components/CloseReading/CloseReadingSection';
+import { sampleVideoData } from './data/sampleData';
 import './App.css';
 
 interface Subtitle {
@@ -32,6 +34,9 @@ const App: React.FC = () => {
   const [readingModeActiveSubtitle, setReadingModeActiveSubtitle] = useState<Subtitle | null>(null);
   const [subtitleListHeight, setSubtitleListHeight] = useState<number>(400);
   const [previousActiveId, setPreviousActiveId] = useState<number | null>(null);
+  const [showReadingModeIndicator, setShowReadingModeIndicator] = useState(false);
+  const [hasShownReadingModeIndicator, setHasShownReadingModeIndicator] = useState(false);
+  const [contentStudyMode, setContentStudyMode] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollCheckRef = useRef<number>(0);
 
@@ -305,6 +310,44 @@ const App: React.FC = () => {
     }
   }, [subtitles]);
 
+  // 快速滚动函数，专门用于点读跳转
+  const fastScrollToSubtitle = useCallback((subtitleId: number) => {
+    const container = subtitleItemsContainerRef.current;
+    if (!container) return;
+
+    const activeElement = container.querySelector(`[data-subtitle-id="${subtitleId}"]`) as HTMLElement;
+    if (!activeElement) return;
+
+    const containerHeight = container.clientHeight;
+    const elementHeight = activeElement.clientHeight;
+    const elementTop = activeElement.offsetTop;
+
+    // 计算目标滚动位置（将元素居中）
+    let targetScrollTop = elementTop - (containerHeight - elementHeight) / 2;
+
+    // 边界处理
+    const maxScrollTop = container.scrollHeight - containerHeight;
+    const minScrollTop = 0;
+
+    const subtitleIndex = subtitles.findIndex(sub => sub.id === subtitleId);
+    const isNearStart = subtitleIndex < 3;
+    const isNearEnd = subtitleIndex >= subtitles.length - 3;
+
+    if (isNearStart) {
+      targetScrollTop = Math.max(minScrollTop, elementTop - 60);
+    } else if (isNearEnd) {
+      targetScrollTop = Math.min(maxScrollTop, elementTop - containerHeight + elementHeight + 60);
+    }
+
+    targetScrollTop = Math.max(minScrollTop, Math.min(targetScrollTop, maxScrollTop));
+
+    // 使用更快的滚动行为
+    container.scrollTo({
+      top: targetScrollTop,
+      behavior: 'auto' // 立即跳转，无动画
+    });
+  }, [subtitles]);
+
   // 监听当前字幕变化并持续跟踪位置
   useEffect(() => {
     if (activeSubtitle) {
@@ -405,8 +448,60 @@ const App: React.FC = () => {
     };
   }, [calculateSubtitleListHeight]);
 
+  // 处理从单词卡片跳转到字幕的功能
+  const handleJumpToSubtitle = useCallback((subtitleId: number) => {
+    const targetSubtitle = subtitles.find(sub => sub.id === subtitleId);
+    if (!targetSubtitle || !videoRef.current) return;
+
+    // 1. 自动启用点读模式
+    setReadingMode(true);
+
+    // 2. 显示点读模式指示器（仅在首次点击时显示）
+    if (!hasShownReadingModeIndicator) {
+      setShowReadingModeIndicator(true);
+      setHasShownReadingModeIndicator(true);
+      setTimeout(() => setShowReadingModeIndicator(false), 2000);
+    }
+
+    // 3. 清理之前的重复播放状态
+    setRepeatMode(false);
+    setCurrentRepeatCount(0);
+    setRepeatSubtitle(null);
+
+    // 4. 设置点读模式的目标字幕
+    setReadingModeActiveSubtitle(targetSubtitle);
+    setTargetEndTime(targetSubtitle.endTime);
+
+    // 5. 视频跳转到指定时间
+    videoRef.current.currentTime = targetSubtitle.startTime;
+
+    // 6. 开始播放（无论之前是否在播放）
+    videoRef.current.play();
+
+    // 7. 立即滚动到字幕位置并高亮（减少延迟）
+    requestAnimationFrame(() => {
+      fastScrollToSubtitle(subtitleId);
+
+      // 8. 立即高亮目标字幕（缩短高亮时间）
+      const subtitleElement = document.getElementById(`subtitle-${subtitleId}`);
+      if (subtitleElement) {
+        subtitleElement.classList.add('highlight-jump');
+        setTimeout(() => {
+          subtitleElement.classList.remove('highlight-jump');
+        }, 1500); // 缩短至1.5秒
+      }
+    });
+  }, [subtitles, fastScrollToSubtitle]);
+
   return (
-    <div className="app">
+    <div className={`app ${contentStudyMode ? 'three-column' : 'two-column'}`}>
+      {/* Reading mode indicator */}
+      {showReadingModeIndicator && (
+        <div className="reading-mode-indicator">
+          🎯 已启用点读模式
+        </div>
+      )}
+
       <div className="video-section">
         <VideoHeader
           title={videoInfo.title}
@@ -463,6 +558,12 @@ const App: React.FC = () => {
           >
             重复播放
           </button>
+          <button
+            className={`toggle-button ${contentStudyMode ? 'active' : ''}`}
+            onClick={() => setContentStudyMode(!contentStudyMode)}
+          >
+            内容精读
+          </button>
           {repeatMode && (
             <div className="repeat-controls">
               <label>重复次数:</label>
@@ -498,6 +599,7 @@ const App: React.FC = () => {
                 return (
                   <div
                     key={subtitle.id}
+                    id={`subtitle-${subtitle.id}`}
                     data-subtitle-id={subtitle.id}
                     className={`subtitle-item ${isActive ? 'active' : ''} clickable`}
                     onClick={() => handleSubtitleClick(subtitle)}
@@ -522,6 +624,16 @@ const App: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Content Study Section - only show when contentStudyMode is true */}
+      {contentStudyMode && sampleVideoData.wordCards && sampleVideoData.wordCards.length > 0 && (
+        <div className="content-study-section">
+          <CloseReadingSection
+            wordCards={sampleVideoData.wordCards}
+            onJumpToSubtitle={handleJumpToSubtitle}
+          />
+        </div>
+      )}
     </div>
   );
 };

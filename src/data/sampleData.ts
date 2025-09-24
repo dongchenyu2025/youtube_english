@@ -1,12 +1,14 @@
 import { VideoWithSubtitles } from '../types';
+import { sampleWordCards } from './wordCardsData';
 
 export const sampleVideoData: VideoWithSubtitles = {
   id: 'bookmark-001',
   title: 'Bookmark - 日常对话',
-  description: '通过真实场景学习地道英语表达',
+  description: 'Who said daily routines were boring? In this video, we learn 36 new words in the theme of daily routines. Join me in the countryside for a joyful English learning experience. Grab yourself a cuppa and relax ☕ 通过真实场景学习地道英语表达，掌握日常对话技巧。这个视频包含了丰富的生活化词汇和表达方式，非常适合中级英语学习者提升口语水平。',
   thumbnail_url: 'https://via.placeholder.com/320x180',
   cloudflare_stream_id: '08135affc82e60108cf1cb8214d2f2c1',
   created_at: new Date().toISOString(),
+  wordCards: sampleWordCards,
   subtitles: [
     {
       id: 1,
