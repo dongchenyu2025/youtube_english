@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>视频播放测试</title>
+</head>
+<body>
+    <h1>视频播放测试</h1>
+
+    <h2>本地视频测试</h2>
+    <video width="400" height="300" controls>
+        <source src="/videos/bookmark.mp4" type="video/mp4">
+        您的浏览器不支持视频播放。
+    </video>
+
+    <h2>测试信息</h2>
+    <p>如果上方视频能正常播放，说明本地视频文件没有问题。</p>
+    <p>如果无法播放，可能是路径或文件格式问题。</p>
+
+    <h2>Cloudflare Stream测试</h2>
+    <div id="cloudflare-test">
+        <p>Cloudflare Stream测试需要真实的stream_id</p>
+    </div>
+
+    <script>
+        console.log('🧪 视频播放测试页面加载完成');
+
+        // 测试本地视频加载
+        const video = document.querySelector('video');
+        video.addEventListener('loadstart', () => {
+            console.log('✅ 本地视频开始加载');
+        });
+
+        video.addEventListener('canplay', () => {
+            console.log('✅ 本地视频可以播放');
+        });
+
+        video.addEventListener('error', (e) => {
+            console.error('❌ 本地视频加载错误:', e);
+        });
+    </script>
+</body>
+</html>

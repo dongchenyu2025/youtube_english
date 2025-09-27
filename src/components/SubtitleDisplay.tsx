@@ -1,9 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Subtitle, DisplaySettings } from '@/types'
-import { useAutoScroll } from '@/hooks/useAutoScroll'
-import { WordModal } from './WordModal'
+import { SubtitleRow } from '../lib/supabaseClient'
 
 interface SubtitleDisplayProps {
   subtitles: Subtitle[]

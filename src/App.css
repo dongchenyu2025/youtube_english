@@ -448,6 +448,72 @@ body {
   }
 }
 
+/* 点击高亮效果 */
+.subtitle-item.highlight-click {
+  background: #ddd6fe !important;
+  border-color: #8b5cf6 !important;
+  transform: translateX(6px) !important;
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3) !important;
+  animation: clickPulse 1s ease-out;
+}
+
+@keyframes clickPulse {
+  0% {
+    background: #f3e8ff;
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.5);
+  }
+  50% {
+    background: #ddd6fe;
+    box-shadow: 0 0 0 8px rgba(139, 92, 246, 0.1);
+  }
+  100% {
+    background: #ddd6fe;
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+  }
+}
+
+/* 点读模式活跃字幕样式 */
+.subtitle-item.reading-mode-active {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  border-width: 2px !important;
+  transform: translateX(5px) !important;
+  box-shadow: 0 3px 6px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* 改进悬停效果 */
+.subtitle-item.clickable:hover {
+  background: #e2e8f0;
+  transform: translateX(2px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease-in-out;
+}
+
+/* 字幕文本清晰度增强 */
+.subtitle-text {
+  font-weight: 500;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.subtitle-item.active .subtitle-text {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* 时间戳样式优化 */
+.subtitle-time {
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle-item.active .subtitle-time {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
 .subtitle-item.highlight-jump {
   background: linear-gradient(135deg, var(--highlight-bg) 0%, #fef9e7 100%);
   border: 2px solid var(--highlight-border);
@@ -1690,4 +1756,42 @@ body {
 /* Touch scrolling optimization for mobile devices */
 .content-study-section .word-cards-grid {
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+/* 添加视频管理页面的优化样式 */
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .hover\:bg-gray-25:hover {
+    background-color: #fafafa;
+  }
+}
+
+/* 响应式卡片动画 */
+@media (max-width: 1023px) {
+  .video-card {
+    animation: slideInUp 0.3s ease-out;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
